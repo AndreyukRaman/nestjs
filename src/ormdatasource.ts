@@ -1,6 +1,6 @@
-import { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataSourceOptions'
+import { DataSource } from 'typeorm';
 
-const config: PostgresDataSourceOptions = {
+export default new DataSource({
   type: 'postgres',
   host: 'localhost',
   port: 5432,
@@ -8,8 +8,5 @@ const config: PostgresDataSourceOptions = {
   password: '123',
   database: 'mediumclone',
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  synchronize: false,
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
-};
-
-export default config;
+});
