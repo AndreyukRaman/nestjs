@@ -34,7 +34,7 @@ export class UserService {
     return await this.userRepository.save(newUser);
   }
 
-  async login(loginUserDto: LoginUserDto): Promise<UserEntity> {
+  async login(loginUserDto: LoginUserDto): Promise<UserEntity | null> {
     const user = await this.userRepository.findOne({
       where:{
         email: loginUserDto.email,
@@ -54,6 +54,14 @@ export class UserService {
     delete (user as any).password
     return user;
   }
+
+
+  findById(id: number): Promise<UserEntity | null> {
+    return this.userRepository.findOne({
+      where:{id}
+    })
+  }
+
 
   generateJwt( user: UserEntity): string {
     return sign({
