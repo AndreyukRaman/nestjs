@@ -44,6 +44,26 @@ export class ArticleService {
         return { articles: [], articlesCount: 0 };
       }
     }
+
+     if(query.favorited){
+       const author = await this.userRepository.findOne({
+         where: {username: query.favorited},
+         relations: {favorites:true}
+       })
+
+       if (!author) {
+         return { articles: [], articlesCount: 0 };
+       }
+
+       const ids = author.favorites.map(el=>el.id);
+       if(ids.length > 0){
+         queryBuilder.andWhere('articles.id IN (:...ids)', {ids})
+       } else{
+         queryBuilder.andWhere('1=0');
+       }
+
+     }
+
     if(query.limit){
 
       queryBuilder.limit(query.limit);
@@ -51,9 +71,24 @@ export class ArticleService {
     if(query.offset){
       queryBuilder.offset(query.offset);
     }
+
+    let favoriteIds: number[] = [];
+    if(currentUserId){
+      const currentUser = await this.userRepository.findOne({
+        where: {id: currentUserId},
+        relations: {favorites:true}
+      })
+      favoriteIds = currentUser?.favorites.map((favorite)=> favorite.id) ?? []
+    }
+    console.log('favoriteIds', favoriteIds)
     const articlesCount = await queryBuilder.getCount();
     const articles =await queryBuilder.getMany()
-    return {articles,articlesCount}
+const articlesWithFavorites = articles.map(article => {
+  const favorited = favoriteIds.includes(article.id);
+  return {...article, favorited};
+})
+
+    return {articles: articlesWithFavorites,articlesCount}
   }
 
 
@@ -88,6 +123,30 @@ async addArticleToFavorites(slug:string, currentUserId:number): Promise<ArticleE
     await this.articleRepository.save(article);
   }
   return article;
+}
+
+async deleteArticleFromFavorites(slug:string, currentUserId:number): Promise<ArticleEntity> {
+  const article = await this.findBySlug(slug);
+  if (!article) {
+    throw new HttpException('Article does not exist', HttpStatus.NOT_FOUND);
+  }
+  const user = await this.userRepository.findOne({
+    where: { id: currentUserId },
+    relations: {favorites:true},
+  })
+  if (!user) {
+    throw new HttpException('User does not exist', HttpStatus.NOT_FOUND);
+  }
+
+  const articleIndex = user?.favorites.findIndex(articleInFavotites => articleInFavotites.id === article.id);
+
+  if(articleIndex >= 0 ){
+user.favorites.splice(articleIndex,1)
+    article.favoritesCount--;
+    await this.userRepository.save(user);
+    await this.articleRepository.save(article);
+  }
+  return article
 }
 
 
