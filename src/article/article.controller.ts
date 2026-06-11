@@ -5,7 +5,7 @@ import {
   Get,
   Param,
   Post,
-  Put,
+  Put, Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -19,10 +19,17 @@ import { ArticleResponseInterface } from '@app/article/types/article.response.in
 import {
   PersistArticleDto,
 } from '@app/article/dto/update.article.dto';
+import { ArticlesResponseInterface } from '@app/article/types/articlesResponseInterface';
 
 @Controller('articles')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {
+  }
+
+
+  @Get()
+  async findAll(@User('id') currentUserId: number, @Query() query: any): Promise<ArticlesResponseInterface>{
+    return await this.articleService.findAll(currentUserId, query);
   }
 
   @Post()
