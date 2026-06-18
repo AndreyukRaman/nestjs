@@ -52,6 +52,11 @@ const article = await this.articleService.findBySlug(slug);
 return this.articleService.buildArticleResponse(article!);
   }
 
+  @Get(':slug/comments')
+  async getComments() {
+    return { comments: [] };
+  }
+
   @Delete(':slug')
   @UseGuards(AuthGuard)
   async deleteArticle(@User('id') currentUserId: number, @Param('slug') slug:string){
