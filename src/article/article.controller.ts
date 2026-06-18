@@ -20,6 +20,7 @@ import {
 } from '@app/article/dto/update.article.dto';
 import { ArticlesResponseInterface } from '@app/article/types/articlesResponseInterface';
 import { BackendValidationPipe } from '@app/shared/pipes/backend.validation.pipe';
+import type { ArticleQueryInterface } from '@app/article/types/article.query.type';
 
 @Controller('articles')
 export class ArticleController {
@@ -28,13 +29,13 @@ export class ArticleController {
 
 
   @Get()
-  async findAll(@User('id') currentUserId: number, @Query() query: any): Promise<ArticlesResponseInterface>{
+  async findAll(@User('id') currentUserId: number, @Query() query: ArticleQueryInterface): Promise<ArticlesResponseInterface>{
     return await this.articleService.findAll(currentUserId, query);
   }
 
   @Get('feed')
   @UseGuards(AuthGuard)
-  async getFeed(@User('id') currentUserId: number, @Query() query: any): Promise<ArticlesResponseInterface>{
+  async getFeed(@User('id') currentUserId: number, @Query() query: ArticleQueryInterface): Promise<ArticlesResponseInterface>{
     return await this.articleService.getFeed(currentUserId, query);
   }
 
@@ -54,7 +55,7 @@ return this.articleService.buildArticleResponse(article!);
 
   @Get(':slug/comments')
   async getComments() {
-    return { comments: [] };
+    return Promise.resolve({ comments: [] });
   }
 
   @Delete(':slug')

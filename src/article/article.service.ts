@@ -5,6 +5,7 @@ import { ArticleEntity } from '@app/article/article.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
 import { ArticleResponseInterface } from '@app/article/types/article.response.interface';
+import { ArticleQueryInterface } from '@app/article/types/article.query.type';
 import slugify from 'slugify';
 import {
   PersistArticleDto,
@@ -22,7 +23,7 @@ export class ArticleService {
     @InjectRepository(FollowEntity) private readonly followRepository: Repository<FollowEntity>,
   ) {}
 
-  async findAll(currentUserId: number, query: any): Promise<ArticlesResponseInterface>{
+  async findAll(currentUserId: number, query: ArticleQueryInterface): Promise<ArticlesResponseInterface>{
     const queryBuilder = this.articleRepository
       .createQueryBuilder('articles')
       .leftJoinAndSelect('articles.author', 'author');
@@ -94,7 +95,7 @@ const articlesWithFavorites = articles.map(article => {
   }
 
 
-  async getFeed(currentUserId: number, query: any): Promise<ArticlesResponseInterface>{
+  async getFeed(currentUserId: number, query: ArticleQueryInterface): Promise<ArticlesResponseInterface>{
 const follows = await this.followRepository.find({
   where: {
     followerId: currentUserId
