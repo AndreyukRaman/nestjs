@@ -56,7 +56,7 @@ export class UserService {
       where:{
         email: loginUserDto.email,
       },
-      select: { id: true, email: true, username: true, bio: true, image: true, password: true },
+      select: { id: true, email: true, username: true, bio: true, image: true, password: true, points: true },
     })
     if(!user){
       throw new HttpException(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY)

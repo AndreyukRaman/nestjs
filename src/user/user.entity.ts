@@ -16,6 +16,9 @@ export class UserEntity {
   @Column({default: ''})
   bio: string;
 
+  @Column({default: 10})
+  points: number;
+
   @Column({default: ''})
   image: string;
 
