@@ -15,12 +15,17 @@ import { UserEntity } from '@app/user/user.entity';
 import { AuthGuard } from '@app/user/guards/auth.guard';
 import { UpdateUserDto } from '@app/user/dto/update.user.dto';
 import { BackendValidationPipe } from '@app/shared/pipes/backend.validation.pipe';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('User')
 @Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
   @Post('users')
   @UsePipes(new BackendValidationPipe())
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiBody({ schema: { example: { user: { username: 'john', email: 'john@example.com', password: 'secret' } } } })
   async createUser(
     @Body('user') createUserDto: CreateUserDto,
   ): Promise<UserResponseInterface> {
@@ -30,6 +35,8 @@ export class UserController {
 
   @Post('users/login')
   @UsePipes(new BackendValidationPipe())
+  @ApiOperation({ summary: 'Login' })
+  @ApiBody({ schema: { example: { user: { email: 'john@example.com', password: 'secret' } } } })
   async login(
     @Body('user') loginUserDto: LoginUserDto,
   ): Promise<UserResponseInterface> {
@@ -39,15 +46,19 @@ export class UserController {
 
   @Get('user')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('Token')
+  @ApiOperation({ summary: 'Get current user' })
   async currentUser( @User() user:UserEntity): Promise<UserResponseInterface>{
     return this.userService.buildUserResponse(user)
   }
 
   @Put('user')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('Token')
+  @ApiOperation({ summary: 'Update current user' })
+  @ApiBody({ schema: { example: { user: { email: 'new@example.com', username: 'newname', bio: '', image: '' } } } })
   async updateCurrentUser(@User('id') currentUserId:number, @Body('user') updateUserDto: UpdateUserDto): Promise<UserResponseInterface> {
     const user = await this.userService.updateUser(currentUserId, updateUserDto);
     return this.userService.buildUserResponse(user)
   }
-
 }

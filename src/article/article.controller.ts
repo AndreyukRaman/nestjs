@@ -21,7 +21,9 @@ import {
 import { ArticlesResponseInterface } from '@app/article/types/articlesResponseInterface';
 import { BackendValidationPipe } from '@app/shared/pipes/backend.validation.pipe';
 import type { ArticleQueryInterface } from '@app/article/types/article.query.type';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Articles')
 @Controller('articles')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {
@@ -29,12 +31,22 @@ export class ArticleController {
 
 
   @Get()
+  @ApiOperation({ summary: 'Get all articles' })
+  @ApiQuery({ name: 'tag', required: false })
+  @ApiQuery({ name: 'author', required: false })
+  @ApiQuery({ name: 'favorited', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'offset', required: false })
   async findAll(@User('id') currentUserId: number, @Query() query: ArticleQueryInterface): Promise<ArticlesResponseInterface>{
     return await this.articleService.findAll(currentUserId, query);
   }
 
   @Get('feed')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('Token')
+  @ApiOperation({ summary: 'Get feed of followed users' })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'offset', required: false })
   async getFeed(@User('id') currentUserId: number, @Query() query: ArticleQueryInterface): Promise<ArticlesResponseInterface>{
     return await this.articleService.getFeed(currentUserId, query);
   }
@@ -42,24 +54,31 @@ export class ArticleController {
   @Post()
   @UseGuards(AuthGuard)
   @UsePipes(new BackendValidationPipe())
+  @ApiBearerAuth('Token')
+  @ApiOperation({ summary: 'Create article' })
+  @ApiBody({ schema: { example: { article: { title: 'Title', description: 'Desc', body: 'Body', tagList: ['tag1'] } } } })
   async create(@User() currentUser: UserEntity, @Body('article') createArticleDto: CreateArticleDto ): Promise<ArticleResponseInterface> {
     const article = await this.articleService.createArticle(currentUser, createArticleDto);
     return this.articleService.buildArticleResponse(article);
   }
 
   @Get(':slug')
+  @ApiOperation({ summary: 'Get article by slug' })
   async getSingleArticle(@Param('slug') slug:string): Promise<ArticleResponseInterface> {
-const article = await this.articleService.findBySlug(slug);
-return this.articleService.buildArticleResponse(article!);
+    const article = await this.articleService.findBySlug(slug);
+    return this.articleService.buildArticleResponse(article!);
   }
 
   @Get(':slug/comments')
+  @ApiOperation({ summary: 'Get comments for article' })
   async getComments() {
     return Promise.resolve({ comments: [] });
   }
 
   @Delete(':slug')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('Token')
+  @ApiOperation({ summary: 'Delete article' })
   async deleteArticle(@User('id') currentUserId: number, @Param('slug') slug:string){
     return await this.articleService.deleteArticle(slug, currentUserId);
   }
@@ -67,14 +86,18 @@ return this.articleService.buildArticleResponse(article!);
   @Put(':slug')
   @UseGuards(AuthGuard)
   @UsePipes(new BackendValidationPipe())
+  @ApiBearerAuth('Token')
+  @ApiOperation({ summary: 'Update article' })
+  @ApiBody({ schema: { example: { article: { title: 'New title', description: 'New desc', body: 'New body' } } } })
   async updateArticle(@User('id') currentUserId: number, @Param('slug') slug:string,  @Body('article') updateArticleDto: PersistArticleDto): Promise<ArticleResponseInterface>{
     const article = await this.articleService.updateArticle(slug,currentUserId,updateArticleDto);
     return this.articleService.buildArticleResponse(article);
   }
 
-
   @Post(':slug/favorite')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('Token')
+  @ApiOperation({ summary: 'Favorite article' })
   async addArticleToFavorites(@User('id') currentUserId: number, @Param('slug') slug:string): Promise<ArticleResponseInterface> {
     const article = await this.articleService.addArticleToFavorites(slug, currentUserId);
     return this.articleService.buildArticleResponse(article);
@@ -82,6 +105,8 @@ return this.articleService.buildArticleResponse(article!);
 
   @Delete(':slug/favorite')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('Token')
+  @ApiOperation({ summary: 'Unfavorite article' })
   async deleteArticleFromFavorites(@User('id') currentUserId: number, @Param('slug') slug:string): Promise<ArticleResponseInterface> {
     const article = await this.articleService.deleteArticleFromFavorites(slug, currentUserId);
     return this.articleService.buildArticleResponse(article);
