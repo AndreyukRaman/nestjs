@@ -69,12 +69,6 @@ export class ArticleController {
     return this.articleService.buildArticleResponse(article!);
   }
 
-  @Get(':slug/comments')
-  @ApiOperation({ summary: 'Get comments for article' })
-  async getComments() {
-    return Promise.resolve({ comments: [] });
-  }
-
   @Delete(':slug')
   @UseGuards(AuthGuard)
   @ApiBearerAuth('Token')
