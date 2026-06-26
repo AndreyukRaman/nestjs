@@ -25,7 +25,7 @@ export class CommentService {
       .leftJoinAndSelect('comment.author', 'author')
       .where('comment.articleId = :articleId', { articleId: article.id })
       .getMany();
-    return { comments };
+    return { comments: comments.map(c => this.buildCommentResponse(c).comment) };
   }
 
   async createComment(slug: string, currentUser: UserEntity, body: string): Promise<CommentEntity> {
@@ -41,8 +41,19 @@ export class CommentService {
   }
 
   buildCommentResponse(comment: CommentEntity): CommentResponseInterface {
-    const { article, ...commentWithoutArticle } = comment;
-    return { comment: commentWithoutArticle };
+    const { article, author, ...rest } = comment;
+    return {
+      comment: {
+        ...rest,
+        author: {
+          username: author.username,
+          bio: author.bio,
+          image: author.image,
+          points: author.points,
+          following: false,
+        },
+      },
+    };
   }
 
   async deleteComment(slug: string, commentId: number, currentUserId: number): Promise<void> {
